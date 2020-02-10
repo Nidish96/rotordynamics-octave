@@ -13,7 +13,9 @@ function [freqs, xf] = FFTFUN(t, x)
     Nt = length(t);
     dt = t(2)-t(1);
     
-    freqs = (0:((Nt-mod(Nt,2))/2-(1-mod(Nt,2))))/(t(end)+dt-t(1));
-    xf = fft(x)/(Nt/2);  xf(1,:) = xf(1,:)/2;
-    xf = xf(1:(Nt/2),:);
+    nnz_comp = (Nt-mod(Nt,2))/2-(1-mod(Nt,2));
+    freqs = (0:nnz_comp)'/(t(end)+dt-t(1));
+
+    xf = fft(x)/nnz_comp;  xf(1,:) = xf(1,:)/2;
+    xf = xf(1:(1+nnz_comp),:);
 end
