@@ -171,84 +171,84 @@ function [Fnl, Jnl] = NL_EVAL(t, X, Xd, nl_els)
     
     switch(nl_els(iN).type)
       case {'clearance', 'Clearance'}
-	gap = nl_els(iN).pars(1);
-	kr = nl_els(iN).pars(2);
+        gap = nl_els(iN).pars(1);
+        kr = nl_els(iN).pars(2);
 
-	x = q(1); y = q(2); xd = qd(1); yd = qd(2);
-	r = sqrt(sum(q.^2));
-	if r~=0
-	  fnl = kr*max(r-gap, 0).*(q./r);
+        x = q(1); y = q(2); xd = qd(1); yd = qd(2);
+        r = sqrt(sum(q.^2));
+        if r~=0
+          fnl = kr*max(r-gap, 0).*(q./r);
 
-	  jnl_xx = kr*((r-gap)./r+gap*x.^2./r.^3);
-	  jnl_xy = kr*gap.*x.*y./r.^3;
+          jnl_xx = kr*((r-gap)./r+gap*x.^2./r.^3);
+          jnl_xy = kr*gap.*x.*y./r.^3;
 
-	  jnl_yx = kr*gap.*x.*y./r.^3;
-	  jnl_yy = kr*((r-gap)./r+gap*y.^2./r.^3);
-	else
-	  fnl = [0; 0];
+          jnl_yx = kr*gap.*x.*y./r.^3;
+          jnl_yy = kr*((r-gap)./r+gap*y.^2./r.^3);
+        else
+          fnl = [0; 0];
 
-	  jnl_xx = 0;
-	  jnl_xy = 0;
+          jnl_xx = 0;
+          jnl_xy = 0;
 
-	  jnl_yx = 0;
-	  jnl_yy = 0;
-	end
+          jnl_yx = 0;
+          jnl_yy = 0;
+        end
       case {'stator', 'Stator'}
-	gap = nl_els(iN).pars(1);
-	kr = nl_els(iN).pars(2);
-	mu = nl_els(iN).pars(3);
+        gap = nl_els(iN).pars(1);
+        kr = nl_els(iN).pars(2);
+        mu = nl_els(iN).pars(3);
 
-	x = q(1); y = q(2); xd = qd(1); yd = qd(2);
-	r = sqrt(sum(q.^2));
-	fn = kr*max(r-gap, 0);
+        x = q(1); y = q(2); xd = qd(1); yd = qd(2);
+        r = sqrt(sum(q.^2));
+        fn = kr*max(r-gap, 0);
 
-	if r~=0
-	  fnl = fn.*(q./r) + mu*fn.*sign(x.*yd-xd.*y).*[-y;x]./r;
+        if r~=0
+          fnl = fn.*(q./r) + mu*fn.*sign(x.*yd-xd.*y).*[-y;x]./r;
 
-	  jnl_xx = kr*((r-gap)./r+gap*x.^2./r.^3) + ...
-		   mu*(kr*((r-gap)./r+gap*x.^2./r.^3)).*sign(x.*yd-xd.*y).*(-y./r) + ...
-		   mu*fn.*sign(x.*yd-xd.*y).*(y.*x./r.^3);
-	  jnl_xy = (kr*gap.*x.*y./r.^3) + ...
-		   mu*((kr*gap.*x.*y./r.^3)).*sign(x.*yd-xd.*y).*(-y./r) + ...
-		   mu*fn.*sign(x.*yd-xd.*y).*(-x.^2./r.^3);
+          jnl_xx = kr*((r-gap)./r+gap*x.^2./r.^3) + ...
+             mu*(kr*((r-gap)./r+gap*x.^2./r.^3)).*sign(x.*yd-xd.*y).*(-y./r) + ...
+             mu*fn.*sign(x.*yd-xd.*y).*(y.*x./r.^3);
+          jnl_xy = (kr*gap.*x.*y./r.^3) + ...
+             mu*((kr*gap.*x.*y./r.^3)).*sign(x.*yd-xd.*y).*(-y./r) + ...
+             mu*fn.*sign(x.*yd-xd.*y).*(-x.^2./r.^3);
 
-	  jnl_yx = (kr*gap.*x.*y./r.^3) + ...
-		   mu*((kr*gap.*x.*y./r.^3)).*sign(x.*yd-xd.*y).*x./r + ...
-		   mu*fn.*sign(x.*yd-xd.*y).*(y.^2./r.^3);
-	  jnl_yy = kr*((r-gap)./r+gap*y.^2./r.^3) + ...
-		   mu*(kr*((r-gap)./r+gap*y.^2./r.^3)).*sign(x.*yd-xd.*y).*(x./r) + ...
-		   mu*fn.*sign(x.*yd-xd.*y).*(-x.*y./r.^3);
-	else
-	  fnl = [0; 0];
+          jnl_yx = (kr*gap.*x.*y./r.^3) + ...
+             mu*((kr*gap.*x.*y./r.^3)).*sign(x.*yd-xd.*y).*x./r + ...
+             mu*fn.*sign(x.*yd-xd.*y).*(y.^2./r.^3);
+          jnl_yy = kr*((r-gap)./r+gap*y.^2./r.^3) + ...
+             mu*(kr*((r-gap)./r+gap*y.^2./r.^3)).*sign(x.*yd-xd.*y).*(x./r) + ...
+             mu*fn.*sign(x.*yd-xd.*y).*(-x.*y./r.^3);
+        else
+          fnl = [0; 0];
 
-	  jnl_xx = 0;
-	  jnl_xy = 0;
+          jnl_xx = 0;
+          jnl_xy = 0;
 
-	  jnl_yx = 0;
-	  jnl_yy = 0;	  
-	end
+          jnl_yx = 0;
+          jnl_yy = 0;	  
+        end
       case {'Cubic', 'cubic'}
-	bx = nl_els(iN).pars(1);
-	by = nl_els(iN).pars(2);
-	fnl = [bx;by].*q.^3;
+        bx = nl_els(iN).pars(1);
+        by = nl_els(iN).pars(2);
+        fnl = [bx;by].*q.^3;
 
-	jnl_xx = 3*bx*q(1)^2;
-	jnl_xy = 0;
+        jnl_xx = 3*bx*q(1)^2;
+        jnl_xy = 0;
 
-	jnl_yx = 0;
-	jnl_yy = 3*by*q(2)^2;
+        jnl_yx = 0;
+        jnl_yy = 3*by*q(2)^2;
       case {'Test', 'test'}
-	kx = nl_els(iN).pars(1);
-	ky = nl_els(iN).pars(2);
-	fnl = [kx;ky].*q;
+        kx = nl_els(iN).pars(1);
+        ky = nl_els(iN).pars(2);
+        fnl = [kx;ky].*q;
 
-	jnl_xx = kx;
-	jnl_xy = 0;
+        jnl_xx = kx;
+        jnl_xy = 0;
 
-	jnl_yx = 0;
-	jnl_yy = ky;
+        jnl_yx = 0;
+        jnl_yy = ky;
       otherwise
-	error ('Unimplemented');
+	      error ('Unimplemented');
     end
     Fnl = Fnl + nl_els(iN).f_shape*fnl;
     Jnl = Jnl + nl_els(iN).f_shape(:, 1)*jnl_xx*nl_els(iN).sel_shape(1,:) + ...

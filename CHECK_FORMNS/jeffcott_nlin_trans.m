@@ -3,7 +3,7 @@ clc
 clear all
 addpath('../ROUTINES');
 
-nonlinearity = 'clearance';
+nonlinearity = 'stator';
 analyze = true;
 				% System Setup
 %% Parameters
@@ -100,28 +100,34 @@ Xd0 = zeros(Nd, 1);
 Wrpms = linspace(100, 2e5, 100);
 
 ## Wrpms = 9e4;
-
+fid = fopen('log.dat', 'w+');
+fprintf(fid, 'Log file\n');
 if analyze
   fprintf('+----------------- Starting Transient Analysis ----------------+\n');
-  for i = 1:length(Wrpms)
+  for i = 1:100
     Wrpm = Wrpms(i);
     Wradps = Wrpm*2*pi/60;
 
     Fn = @(t) Wradps^2*(FCb.*cos(Wradps*t)+FSb.*sin(Wradps*t))+Fgb;
 
-    tic
-    [T, X, Xd, Xdd] = HHTA_NL(Mb, Cb-Wradps*Gb, Kb, Fn, nl_els, X0, Xd0, 0, Tmax, 1/fs, iopts);
-    toc
-
-    save(sprintf('./DATS/jeffcott_clearance_nlin_trans_%d.mat',i), 'T', 'X', 'Xd', 'Xdd', 'Wrpm', 'Wradps');
+    try
+      tic
+      [T, X, Xd, Xdd] = HHTA_NL(Mb, Cb-Wradps*Gb, Kb, Fn, nl_els, X0, Xd0, 0, Tmax, 1/fs, iopts);
+      toc
+      save(sprintf('./DATS/jeffcott_%s_nlin_trans_%d.mat',nonlinearity, i), 'T', 'X', 'Xd', 'Xdd', 'Wrpm', 'Wradps');
+    catch me
+      fprintf(fid, '%d %frpm\n', i, Wrpm);
+      disp('not complete');
+    end
 
     fprintf('Done %d/%d\n', i, length(Wrpms))
   end
 end
+fclose(fid);
 
 % Single Data Plotting
-i = 45;
-load(sprintf('./DATS/jeffcott_clearance_nlin_trans_%d.mat', i));
+##i = 1;
+##load(sprintf('./DATS/jeffcott_%s_nlin_trans_%d.mat', nonlinearity, i));
         
 figure(1)
 clf()
@@ -187,32 +193,32 @@ end
 [S, f, t] = specgram(Rb(1,:)*X, 256, fs);
 figure(4); imagesc(t, f, log(abs(S))); set (gca, "ydir", "normal");
 
-				% Multiple Data Plotting
-% Spectrogram Evolution
-for i=fix(linspace(1, length(Wrpms), 10))
-  load(sprintf('./DATS/jeffcott_clearance_nlin_trans_%d.mat',i))
-  
-  figure(1)
-  clf()
-  
-  specgram(Rb(1,:)*X, 256, fs);
-  title(sprintf('Spin Speed = %f', Wrpms(i)))
-
-  pause(0.0001)
-  fprintf('Plotted %d\n', i);
-end
-
-				% Waterfall plot
-figure(3)
-clf()
-for i=1:length(Wrpms)
-  load(sprintf('./DATS/jeffcott_clearance_nlin_trans_%d.mat',i));
-  ti = find((T(1:end-1)-Tcut).*(T(2:end)-Tcut)<=0); ti = min(ti);
-  [freq, Xf] = FFTFUN(T(ti:end)-T(ti), (Rb(1:2, :)*X(:, ti:end))');
-
-  plot3(freq, Wrpms(i)*ones(size(freq)), abs(Xf(:, 1)), 'k-', 'LineWidth', 2); hold on
-  pause(0.0001)
-end
-xlabel('Frequency (Hz)')
-ylabel('Spin Speed (rpm)')
-zlabel('Amplitude (m)')
+##				% Multiple Data Plotting
+##% Spectrogram Evolution
+##for i=fix(linspace(1, length(Wrpms), 10))
+##  load(sprintf('./DATS/jeffcott_clearance_nlin_trans_%d.mat',i))
+##  
+##  figure(1)
+##  clf()
+##  
+##  specgram(Rb(1,:)*X, 256, fs);
+##  title(sprintf('Spin Speed = %f', Wrpms(i)))
+##
+##  pause(0.0001)
+##  fprintf('Plotted %d\n', i);
+##end
+##
+##				% Waterfall plot
+##figure(3)
+##clf()
+##for i=1:length(Wrpms)
+##  load(sprintf('./DATS/jeffcott_clearance_nlin_trans_%d.mat',i));
+##  ti = find((T(1:end-1)-Tcut).*(T(2:end)-Tcut)<=0); ti = min(ti);
+##  [freq, Xf] = FFTFUN(T(ti:end)-T(ti), (Rb(1:2, :)*X(:, ti:end))');
+##
+##  plot3(freq, Wrpms(i)*ones(size(freq)), abs(Xf(:, 1)), 'k-', 'LineWidth', 2); hold on
+##  pause(0.0001)
+##end
+##xlabel('Frequency (Hz)')
+##ylabel('Spin Speed (rpm)')
+##zlabel('Amplitude (m)')
