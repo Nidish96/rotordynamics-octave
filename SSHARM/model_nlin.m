@@ -5,10 +5,11 @@ addpath('../ROUTINES')
 analyze = true;
 depict = false;
 lissajous = true;
-nlin = 'clearance';
+nlin = 'stator';
+mu = 0.8;
 disc = true;
 upordown = 'up';
-h = [0 1 3 5 7];
+h = [0 1 2 3 4 5 6 7 8 9];
 Nt = 2^10;
 %% Parameters
 E   = 190e9;
@@ -77,7 +78,7 @@ Rb = Lb(end-3:end,:);
 
 %% Non-linearity
 if nlin
-  nl_els = struct('type', nlin, 'pars', [0.5*25.4e-3, 1e8, 0.5], ...
+  nl_els = struct('type', nlin, 'pars', [0.5*25.4e-3, 1e8, mu], ...
 		  'sel_shape', Lb((Nn-1-1)*4+(1:2), :), ...
 		  'f_shape', Lb((Nn-1-1)*4+(1:2), :)');
 else
@@ -113,8 +114,9 @@ Nhmax = max(h);
 
 Copt = struct('Nmax', 1000, 'Display', 1, 'angopt', 1e-4);
 if analyze
+  U0 = HARMONICSTIFFNESS(Mb, Cb, Kb, Wstart, h)\[Fgb; FCb*Wstart^2; FSb*Wstart^2; zeros(Nd*(Nhc-3),1)];
   Ubws = CONTINUE(@(Uw) ROTOR_RESFUN(Uw, Mb, Cb, Gb, Kb, Fgb, FCb, FSb, h, Nt, nl_els), ...
-		  zeros(Nd*Nhc, 1), Wstart, Wend, ds, Copt);
+		  U0, Wstart, Wend, ds, Copt);
 
   D1 = HARMONICSTIFFNESS(0, 1, 0, 1, h);
   C.Ws = Ubws(end, :);
@@ -124,16 +126,16 @@ if analyze
   C.Vdyn_amp = Rb*sqrt(squeeze(sum(C.Vh(:, 2:end, :).^2, 2)));
 else
   if disc
-    load(sprintf('./DATS/LD_%s_NLINRESP_%s_H%d.mat',nlin,upordown,Nhmax), 'C', 'Ubws', 'h');
+    load(sprintf('./DATS/LD_%s_NLINRESP_%s_%.2f_H%d.mat',nlin,mu,upordown,Nhmax), 'C', 'Ubws', 'h');
   else
-    load(sprintf('./DATS/ROD_%s_NLINRESP_%s_H%d.mat',nlin,upordown,Nhmax), 'C', 'Ubws', 'h');
+    load(sprintf('./DATS/ROD_%s_NLINRESP_%s_%.2f_H%d.mat',nlin,mu,upordown,Nhmax), 'C', 'Ubws', 'h');
   end
 end
 
 if disc 
-  save(sprintf('./DATS/LD_%s_NLINRESP_%s_H%d.mat',nlin,upordown,Nhmax), 'C', 'Ubws', 'h');
+  save(sprintf('./DATS/LD_%s_%.2f_NLINRESP_%s_H%d.mat',nlin,mu,upordown,Nhmax), 'C', 'Ubws', 'h');
 else 
-  save(sprintf('./DATS/ROD_%s_NLINRESP_%s_H%d.mat',nlin,upordown,Nhmax), 'C', 'Ubws', 'h');
+  save(sprintf('./DATS/ROD_%s_%.2f_NLINRESP_%s_H%d.mat',nlin,mu,upordown,Nhmax), 'C', 'Ubws', 'h');
 end
 
 %% Plotting

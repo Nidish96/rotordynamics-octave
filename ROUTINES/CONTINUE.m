@@ -60,9 +60,8 @@ function [U, R, J] = CONTINUE(func, u0, lam0, lam1, ds, varargin)
           disp('Diverged!');
           break;
         else
-          disp('Diverged! Trying with zero initial guess!');
-          uguess = uguess*0;
-          break;
+          disp('Diverged! Trying with first initial guess!');
+          uguess = U(:,1);
           continue;
         end
       else
